@@ -1,7 +1,7 @@
 # python_scripts
 A bunch of Python scripts I use a lot
 
-##whenchanged
+## whenchanged
 typical fs watcher, using watchdog. Whenever a file gets modified, he sees it ;)
 
 usage: whenchanged [-h] [-t T] [--s S [S ...]] [-c C]
@@ -13,7 +13,7 @@ optional arguments:
   -c C           execute a simple shell command   
 
 
-##relsize
+## relsize
 I3-wm does not support relative size of windows. This tiny script takes a 
 class name and the relative size you wish and scales it.
 
