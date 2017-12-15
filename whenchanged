@@ -1,0 +1,113 @@
+#!/usr/bin/python
+import sys
+import os
+import logging
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+from subprocess import call
+
+
+import time
+
+#exclude specific file endings
+endings = ['swp', 'swn', 'swo']
+
+# for debugging adjust level attribute
+LOG_FORMAT = "%(levelname)s %(asctime)s - %(message)s"
+logging.basicConfig(level = logging.ERROR,
+                    format = LOG_FORMAT)
+logger = logging.getLogger('whenchanged')
+
+
+class MyFSHandler(FileSystemEventHandler):
+    ''' provides a specified File System Event Handler
+    Input: Target is the file that should be executed'''
+
+    def __init__(self, target):
+        self._events = {}
+        self._target = target
+
+    ''' when a file in a surveyed directory is modified
+    runCmd should be called'''
+    def on_modified(self, event):
+        f_name = event.src_path.split('/').pop()
+
+        try:
+            f_name = int(f_name)
+        except ValueError:
+            vim_sfx = lambda event: False if [f for f in endings if f_name.endswith(f)] else True
+            isFile = not os.path.isdir(event.src_path)
+            if(self.inTime(event) and vim_sfx(event) and isFile):
+                logger.info(event)
+                self.runCmd()
+        else:
+            return
+
+    ''' sets up the call. By now only file execution is possible'''
+    def runCmd(self):
+        call(self._target, shell=(len(self._target) == 1))
+
+    ''' Observes if file got modified in the last second. If thats the case,
+    it returns False '''
+    def inTime(self, event):
+
+        if not event.src_path in self._events:
+            self._events[event.src_path] = float(time.time())
+            return True
+        elif float(time.time()) - self._events[event.src_path] > 1:
+            self._events[event.src_path] = float(time.time())
+            return True
+        else:
+            self._events[event.src_path] = float(time.time())
+            return False
+
+if __name__ == "__main__":
+
+    ''' argparsing  '''
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', help="target script to execute")
+    parser.add_argument('--s', nargs='+',  help="source files to watch")
+    parser.add_argument('-c', help= "execute a simple shell command")
+
+    args = parser.parse_args()
+
+    # Source files to survey
+    source = []
+
+    # target file is mandatory
+    if(not (args.t or args.c)):
+        logger.error("target file or cmd is required")
+        sys.exit(1)
+
+    # get list of sourcefiles to survey
+    if(args.s):
+        try:
+            source = [os.path.realpath(arg) for arg in args.s]
+            logger.info(source)
+        except:
+            print('opt arg given are no files {}'.format(args.s))
+
+    if(args.t):
+        t = os.path.realpath(args.t)
+
+    obs = Observer()
+    t  = lambda: args.c if args.c else args.t
+    handler = MyFSHandler(t().split(' '))
+
+    for s in source:
+        if os.path.isdir(s):
+            obs.schedule(handler, s, recursive = False)
+        else:
+            s = os.path.dirname(s)
+            obs.schedule(handler, s, recursive = False )
+
+    # start Observer, listen to Keyboard Interrupts
+    try:
+        obs.start()
+        obs.join()
+    except KeyboardInterrupt as k:
+        print()
+        sys.exit(0)
+

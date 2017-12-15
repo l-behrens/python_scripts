@@ -1,0 +1,50 @@
+#!/usr/bin/python
+import i3ipc as i3
+import time
+
+if __name__ == "__main__":
+    '''script sets the size of a window to an arbitrary relative size
+    inputs: -name to identify the window
+            -size (x, y): relative size of the window in x and y coordinate
+    '''
+    con = i3.Connection()
+
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('name', help="class name of the window")
+    parser.add_argument('size', nargs=2, type=int,
+                        help="width x height of the Window in ppt")
+
+    args = parser.parse_args()
+
+    cls = args.name
+
+    # get the resolution of the active monitor
+    wks = con.get_workspaces()
+    res = [(wk['rect']['height'], wk['rect']['width'])
+           for wk in wks if wk['focused'] == True]
+    y_res, x_res = res.pop()
+
+    # get the absolute 0 0 position of the active monitor
+    pos = [(wk['rect']['x'], wk['rect']['y'])
+           for wk in wks if wk['focused'] == True]
+    pos = pos.pop()
+
+    # Calculate the absolute size from relative input
+    x_res = int((float(args.size[0] / 100)) * x_res)
+    y_res = int((float(args.size[1] / 100)) * y_res)
+    print(x_res, y_res)
+
+    tree = con.get_tree()
+
+    try:
+        node = tree.find_classed(str(cls)).pop()
+    except Exception as e:
+        print('error: %s not found \nException: %s ' % (cls, e))
+    else:
+        if(node.props.focused):
+            node.command('[con_id=%s] move absolute position %s %s px' %
+                         (node.id, pos[0], pos[1]))
+            node.command('[con_id=%s] resize set %s %s px' %
+                         (node.id, x_res, y_res))
