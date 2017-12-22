@@ -15,14 +15,14 @@ def touch(fname, times=None):
 def get_history():
 
     with open(history, 'r') as hist:
-        for l in hist:
+        for l in reversed(list(hist)):
             print(l)
 
 
-def save_history(orig, trans):
+def save_history(orig, trans, lang):
 
     with open(history, 'a') as hist:
-        hist.write('%s - %s\r' % (orig, trans))
+        hist.write('## {:<40}{:<40}{:<10}\r'.format(orig, trans, lang))
 
 
 def look(term, dest='de'):
@@ -42,21 +42,24 @@ if __name__ == "__main__":
     if(args):
         print('{:<10}{:<55}{:>0}'.format('lang', 'translation', 'certenty'))
     else:
-        print('{}'.format('History'))
+        print('## {:<40}{:<40}{:<10}'.format('term', 'translation', 'lang'))
         get_history()
 
     for arg in args:
-        if arg.startswith('!clear'):
+        if(arg.startswith('##')):
+           break
+        elif arg.startswith('!clear'):
             os.remove(history)
             print('cleared history')
             break
         elif arg.startswith('!es'):
+            #arg.pop(0)
             arg = arg.strip('!es')
             res = look(arg, dest='es')
         else:
             res = look(arg)
         tmp = res.text
-        save_history(arg, tmp)
+        save_history(arg, tmp, res.src)
         while len(tmp) > 50:
             print('{:<10}{:<55}{:>0}'.format(
                 res.src, tmp[:50], res.confidence))
