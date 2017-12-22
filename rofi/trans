@@ -1,0 +1,64 @@
+#!/usr/bin/python
+import sys
+import os
+import asyncio
+from aiogoogletrans import Translator
+
+history = '/'.join([os.path.dirname(os.path.realpath(__file__)), 'history'])
+
+
+def touch(fname, times=None):
+    with open(fname, 'a'):
+        os.utime(fname, times)
+
+
+def get_history():
+
+    with open(history, 'r') as hist:
+        for l in hist:
+            print(l)
+
+
+def save_history(orig, trans):
+
+    with open(history, 'a') as hist:
+        hist.write('%s - %s\r' % (orig, trans))
+
+
+def look(term, dest='de'):
+    loop = asyncio.get_event_loop()
+    translator = Translator()
+    return loop.run_until_complete(
+        translator.translate(term, dest=dest))
+
+
+if __name__ == "__main__":
+
+    touch(history)
+
+    args = sys.argv
+    args.pop(0)
+
+    if(args):
+        print('{:<10}{:<55}{:>0}'.format('lang', 'translation', 'certenty'))
+    else:
+        print('{}'.format('History'))
+        get_history()
+
+    for arg in args:
+        if arg.startswith('!clear'):
+            os.remove(history)
+            print('cleared history')
+            break
+        elif arg.startswith('!es'):
+            arg = arg.strip('!es')
+            res = look(arg, dest='es')
+        else:
+            res = look(arg)
+        tmp = res.text
+        save_history(arg, tmp)
+        while len(tmp) > 50:
+            print('{:<10}{:<55}{:>0}'.format(
+                res.src, tmp[:50], res.confidence))
+            tmp = tmp[50:]
+        print('{:<10}{:<55}{:>0}'.format(res.src, tmp, res.confidence))
