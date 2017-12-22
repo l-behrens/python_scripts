@@ -29,3 +29,12 @@ optional arguments:
 for instance I like having qutebrowsers tabs on the right of my screen and take 10% of its width. When I open mpv to play some video I like its scratchpad to fill the browsers screen but leave my messy tabpanel visible.
 
 ![alt text](https://github.com/l-behrens/python_scripts/blob/master/img/relsize.png)
+
+## Rofi Scripts
+
+These scripts are mods for the Rofi Application Launcher 
+https://github.com/DaveDavenport/rofi
+
+run them:
+
+$> rofi -show <mod_name> -modi <mod_nam>:<path_to_script>
