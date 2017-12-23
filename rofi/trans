@@ -15,14 +15,13 @@ def touch(fname, times=None):
 def get_history():
 
     with open(history, 'r') as hist:
-        for l in reversed(list(hist)):
-            print(l)
+        print(('').join(reversed(list(hist))))
 
 
 def save_history(orig, trans, lang):
 
     with open(history, 'a') as hist:
-        hist.write('## {:<40}{:<40}{:<10}\r'.format(orig, trans, lang))
+        hist.write('## {:<40}{:<40}{:<10}\n'.format(orig, trans, lang))
 
 
 def look(term, dest='de'):
