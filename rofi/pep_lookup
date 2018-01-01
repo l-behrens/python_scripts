@@ -1,0 +1,61 @@
+#!/usr/bin/python
+import os
+import sys
+from subprocess import check_output
+from subprocess import Popen
+from subprocess import DEVNULL
+
+HOME = os.getenv('HOME')
+p = os.path.join(HOME, 'develop/peps')
+
+def get_title(path):
+    '''retrieves titles from results'''
+    PEP, Status, Title = (None, None, None)
+    with open(path, 'r') as p:
+        for l in p.readlines():
+            if(str(l).startswith('PEP')):
+                PEP = l.strip('PEP:').strip()
+            elif(str(l).startswith('Title')):
+                Title = l.strip('Title:').strip()
+            elif(str(l).startswith('Status')):
+                Status = l.strip('Status:').strip()
+            if(PEP and Status and Title):
+                return(PEP, Status, Title)
+    return None
+
+def convert_pdf_and_open(path):
+    f_name = path.split('/')[-1]
+    f_name = os.path.splitext(f_name)[0]+'.pdf'
+    target = os.path.dirname(path)
+    target = os.path.join(target, 'pdfs', f_name)
+    Popen(['pandoc', path, '-o', target], stdout=DEVNULL)
+
+
+def lookup_query(query):
+    ret = check_output(['grep','-ric', query, p])
+    ret = ret.decode('utf-8').strip('\'')
+    ret = ret.split('\n')
+    ret = [x for x in ret if x]
+
+    buf = {}
+
+    for i in ret:
+        path, c = i.split(':')
+        if(int(c)>0):
+            buf[int(c)] = path
+
+
+    print('{:<5}{:<10}{:<45}'.format('PEP', 'State', 'Title'))
+    for i in reversed(sorted(buf.keys())):
+        title = get_title(buf[i])
+        print('{:<5}{:<10}{:<45}'.format(title[0],title[1],title[2]))
+
+if __name__ == "__main__":
+
+    args = sys.argv
+    query = args[1]
+
+    if(len(args) == 2):
+        lookup_query(args[1])
+
+
