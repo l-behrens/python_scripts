@@ -12,7 +12,6 @@ optional arguments:
   * --s S [S ...]  source files to watch
   * -c C           execute a simple shell command   
 
-
 ## relsize
 I3-wm does not support relative size of windows. This tiny script takes a 
 class name and the relative size you wish and scales it.
@@ -38,3 +37,18 @@ https://github.com/DaveDavenport/rofi
 run them:
 
 $> rofi -show <mod_name> -modi <mod_nam>:<path_to_script>
+
+## convert.py
+
+This script 
+* reads in an mws inventory sheet
+* groups products in all permutations of specified columns
+
+what is done:
+* conversion of excel sheet to matrix
+* calculation of relevant groupings
+
+todo:
+* generation of unique child products
+* generation of parent product pages
+* parsing to flat file format
